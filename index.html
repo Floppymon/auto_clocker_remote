@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Auto Clocker Remote</title>
     <meta name="theme-color" content="#f8f9fa">
+    
+    <link rel="icon" href="data:,">
+    
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0byBDbG9ja2VyIFJlbW90ZSIsInNob3J0X25hbWUiOiJDbG9ja2VyIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjMmVkNTczIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
     <style>
         /* --- COPY OF POPUP.CSS --- */
@@ -198,8 +201,8 @@
         
         renderCalendar(currentDate);
 
-        // --- SEND LOGIC ---
-        function sendSchedule() {
+        // --- DUAL SEND LOGIC ---
+        async function sendSchedule() {
             const topic = ntfyInput.value.trim();
             const inTime = clockInInput.value;
             const outTime = clockOutInput.value;
@@ -209,26 +212,52 @@
             if(selectedDates.length === 0) return showStatus("Select at least one date.", "error");
             if(!inTime && !outTime) return showStatus("Set at least one time.", "error");
 
+            // 1. Prepare Payload (For PC)
             const payload = {
                 type: "REMOTE_UPDATE",
                 dates: selectedDates.sort(),
                 clockIn: inTime,
                 clockOut: outTime,
-                isRandomized: isRandom // Sending the setting
+                isRandomized: isRandom
             };
 
-            showStatus("Sending to PC...", "normal");
+            // 2. Prepare Human Message (For your Phone Notification)
+            // Convert dates to short strings e.g. "25, 26"
+            const dateDisplays = selectedDates.map(d => d.split('-')[2]).join(", ");
+            const humanBody = `IN: ${inTime || '--'} | OUT: ${outTime || '--'}\nDays: ${dateDisplays}\n${isRandom ? '(Randomised)' : ''}`;
 
-            fetch(`https://ntfy.sh/${topic}`, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Title': 'Remote Schedule Update', 'Tags': 'gear', 'Priority': 'high' }
-            })
-            .then(res => {
-                if(res.ok) showStatus("Sent! PC will sync in <1 min.", "success");
-                else showStatus("Error sending to Ntfy.", "error");
-            })
-            .catch(() => showStatus("Network Error.", "error"));
+            showStatus("Sending...", "normal");
+
+            try {
+                // --- REQUEST 1: SILENT DATA (Priority 1) ---
+                // This is what the Extension reads. Your phone should ignore/silence this.
+                await fetch(`https://ntfy.sh/${topic}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: { 
+                        'Title': 'Internal_Data', 
+                        'Priority': '1', // Min priority (Silent)
+                        'Tags': 'gear'
+                    }
+                });
+
+                // --- REQUEST 2: VISIBLE NOTIFICATION (Priority 4) ---
+                // This is what YOU read. The Extension ignores this because it's not JSON with "REMOTE_UPDATE".
+                await fetch(`https://ntfy.sh/${topic}`, {
+                    method: 'POST',
+                    body: humanBody,
+                    headers: { 
+                        'Title': 'Schedule Updated', 
+                        'Priority': '4', // High priority (Visible)
+                        'Tags': 'calendar' 
+                    }
+                });
+
+                showStatus("Sent! PC syncing...", "success");
+
+            } catch (err) {
+                showStatus("Network Error.", "error");
+            }
         }
 
         function showStatus(msg, type) {
