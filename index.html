@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Clocker Remote</title>
+    <meta name="theme-color" content="#2ed573">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0byBDbG9ja2VyIFJlbW90ZSIsInNob3J0X25hbWUiOiJDbG9ja2VyIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjMmVkNTczIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; background: #f8f9fa; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #2ed573; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        label { display: block; text-align: left; font-weight: bold; margin-top: 10px; color: #555; }
+        .status { margin-top: 20px; font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+    <h2>Remote Scheduler</h2>
+    
+    <label>Ntfy Topic (Must match PC)</label>
+    <input type="text" id="topic" placeholder="e.g. my_secret_topic_123">
+
+    <label>Date</label>
+    <input type="date" id="date">
+
+    <label>Clock IN Time</label>
+    <input type="time" id="inTime">
+
+    <label>Clock OUT Time</label>
+    <input type="time" id="outTime">
+
+    <button onclick="sendSchedule()">Update PC Schedule</button>
+    <div id="status" class="status"></div>
+
+    <script>
+        // Load saved topic
+        const storedTopic = localStorage.getItem('ntfyTopic');
+        if(storedTopic) document.getElementById('topic').value = storedTopic;
+
+        // Set default date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('date').value = tomorrow.toISOString().split('T')[0];
+
+        function sendSchedule() {
+            const topic = document.getElementById('topic').value.trim();
+            const date = document.getElementById('date').value;
+            const inTime = document.getElementById('inTime').value;
+            const outTime = document.getElementById('outTime').value;
+
+            if(!topic || !date || (!inTime && !outTime)) {
+                alert("Please fill in Topic, Date, and at least one Time.");
+                return;
+            }
+
+            localStorage.setItem('ntfyTopic', topic);
+
+            // Payload matches what the Extension expects
+            const payload = {
+                type: "REMOTE_UPDATE",
+                dates: [date],
+                clockIn: inTime,
+                clockOut: outTime
+            };
+
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = "Sending...";
+
+            fetch(`https://ntfy.sh/${topic}`, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: {
+                    'Title': 'Remote Schedule Update',
+                    'Tags': 'gear'
+                }
+            })
+            .then(res => {
+                if(res.ok) statusEl.textContent = "Sent! PC will sync within 1 min.";
+                else statusEl.textContent = "Error sending.";
+            })
+            .catch(err => statusEl.textContent = "Network Error");
+        }
+    </script>
+</body>
+</html>
