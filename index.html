@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Auto Clocker Remote</title>
     <meta name="theme-color" content="#f8f9fa">
-    <link rel="icon" href="data:,">
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0byBDbG9ja2VyIFJlbW90ZSIsInNob3J0X25hbWUiOiJDbG9ja2VyIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjMmVkNTczIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     
     <style>
         /* --- STYLES --- */
@@ -15,6 +16,8 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f8f9fa; color: #333; margin: 0; padding: 20px;
             max-width: 400px; margin-left: auto; margin-right: auto;
+            /* Disable pull-to-refresh on mobile to feel more like an app */
+            overscroll-behavior-y: none; 
         }
 
         /* Header */
@@ -28,7 +31,7 @@
         .back-icon:hover { transform: translateX(-2px); }
 
         /* Inputs */
-        .input-group { margin-bottom: 20px; text-align: center; }
+        .input-group { margin-bottom: 5px; text-align: center; }
         .time-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
         .time-col { display: flex; flex-direction: column; flex: 1; }
         .time-col label { font-size: 11px; font-weight: 700; color: #636e72; margin-bottom: 4px; text-align: left; }
@@ -69,7 +72,8 @@
         button.action-btn { width: 100%; padding: 14px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
         button.secondary-btn { width: 100%; padding: 14px; border: 2px solid #dfe6e9; background: #fff; color: #636e72; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 15px; }
         
-        #status { margin-top: 20px; font-size: 13px; text-align: center; font-weight: 500; min-height: 20px; }
+        #status { margin-top: 0; font-size: 13px; text-align: center; font-weight: 500; display: none; }
+        #status.visible { display: block; margin-top: 20px; }
         .text-error { color: #ff4757; }
         .text-success { color: #2ed573; }
 
@@ -87,34 +91,17 @@
         .banner-active { background: #e8f5e9; color: #2ed573; border: 1px solid #c8e6c9; }
         .banner-inactive { background: #ffebee; color: #ff4757; border: 1px solid #ffcdd2; }
 
-        /* Refresh Button & Spinner */
-        .refresh-btn {
-            background: none; 
-            border: none; 
-            color: #2ed573; 
-            font-weight: bold; 
-            font-size: 12px; 
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .refresh-btn { background: none; border: none; color: #2ed573; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .refresh-icon { transition: transform 0.5s; }
-        
-        /* SPIN ANIMATION */
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinning { animation: spin 1s linear infinite; }
-
     </style>
 </head>
 <body>
 
     <div id="inputView">
         <div class="header">
-            <h3>Auto Clocker</h3>
+            <h3>Auto Clocker Remote</h3>
             <div class="header-right">
                 <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -140,14 +127,13 @@
             </div>
         </div>
         
-        <button id="actionBtn" class="action-btn" onclick="sendSchedule()">Update PC Schedule</button>
+        <button id="actionBtn" class="action-btn" onclick="sendSchedule()">Update Schedule</button>
         
         <div id="status"></div>
 
         <div id="inlineScheduleArea" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h4 style="margin:0; color:#636e72;">Current Schedule</h4>
-                
                 <button class="refresh-btn" onclick="forceSync()">
                     <svg id="refreshIcon" class="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M23 4v6h-6"></path>
@@ -186,6 +172,13 @@
     </div>
 
     <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch(e => console.log('SW Registration Failed', e));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             let currentDate = new Date(); 
             let selectedDates = []; 
@@ -203,7 +196,7 @@
             const inlineScheduleArea = document.getElementById('inlineScheduleArea');
             const listContainer = document.getElementById('scheduleListContainer');
             const pcStatusBanner = document.getElementById('pcStatusBanner');
-            const refreshIcon = document.getElementById('refreshIcon'); // New icon
+            const refreshIcon = document.getElementById('refreshIcon');
 
             // Settings
             try {
@@ -217,7 +210,7 @@
             } catch(e){}
 
             // Navigation
-            window.showInputView = () => { settingsView.classList.add('hidden'); inputView.classList.remove('hidden'); statusEl.textContent = ''; };
+            window.showInputView = () => { settingsView.classList.add('hidden'); inputView.classList.remove('hidden'); showStatus(''); };
             window.showSettingsView = () => { inputView.classList.add('hidden'); settingsView.classList.remove('hidden'); };
 
             // Calendar
@@ -271,7 +264,14 @@
 
             function showStatus(msg, type) {
                 statusEl.textContent = msg;
-                statusEl.className = type === "error" ? "text-error" : (type === "success" ? "text-success" : "");
+                statusEl.className = ''; 
+                if (msg) {
+                    statusEl.classList.add('visible');
+                    if (type === "error") statusEl.classList.add('text-error');
+                    if (type === "success") statusEl.classList.add('text-success');
+                } else {
+                    statusEl.classList.remove('visible');
+                }
             }
 
             // Fetch Status
@@ -305,24 +305,18 @@
                 } catch(err) { listContainer.innerHTML = '<div style="text-align:center;color:#ff4757;">Connection Error.</div>'; }
             };
 
-            // --- UPDATED FORCE SYNC WITH ANIMATION ---
             window.forceSync = async function() {
                 const topic = ntfyInput.value.trim();
-                if(refreshIcon) refreshIcon.classList.add('spinning'); // START SPIN
+                if(refreshIcon) refreshIcon.classList.add('spinning'); 
 
                 try {
-                    // 1. Send Ping
                     await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
-                    
-                    // 2. Wait 3 seconds for PC to reply
                     await new Promise(resolve => setTimeout(resolve, 3000));
-                    
-                    // 3. Check Status Again
                     await fetchPCStatus(true);
                 } catch(e) {
                     console.log(e);
                 } finally {
-                    if(refreshIcon) refreshIcon.classList.remove('spinning'); // STOP SPIN
+                    if(refreshIcon) refreshIcon.classList.remove('spinning'); 
                 }
             };
 
@@ -353,7 +347,6 @@
                 }
             }
 
-            // AUTO-INIT
             if (ntfyInput.value) fetchPCStatus();
         });
     </script>
