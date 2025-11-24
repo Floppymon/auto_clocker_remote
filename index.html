@@ -5,124 +5,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Auto Clocker Remote</title>
     <meta name="theme-color" content="#f8f9fa">
-    
     <link rel="icon" href="data:,">
-    
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0byBDbG9ja2VyIFJlbW90ZSIsInNob3J0X25hbWUiOiJDbG9ja2VyIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjMmVkNTczIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
     
     <style>
-        /* --- RESET & BASE STYLES --- */
+        /* --- STYLES --- */
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f8f9fa; 
-            color: #333; 
-            margin: 0;
-            padding: 20px;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
+            background-color: #f8f9fa; color: #333; margin: 0; padding: 20px;
+            max-width: 400px; margin-left: auto; margin-right: auto;
         }
 
-        h3 { margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #636e72; text-align: center; }
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; height: 30px; }
+        .header h3 { margin: 0; font-size: 18px; font-weight: 800; color: #636e72; }
+        .header-right { display: flex; align-items: center; }
 
-        /* INPUTS */
-        .input-group { margin-bottom: 20px; width: 100%; }
+        /* Icons */
+        .settings-icon, .back-icon { cursor: pointer; padding: 4px; transition: transform 0.2s ease; color: #636e72; }
+        .settings-icon:hover { transform: rotate(30deg); }
+        .back-icon:hover { transform: translateX(-2px); }
+
+        /* Inputs */
+        .input-group { margin-bottom: 20px; text-align: center; }
         .time-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
         .time-col { display: flex; flex-direction: column; flex: 1; }
         .time-col label { font-size: 11px; font-weight: 700; color: #636e72; margin-bottom: 4px; text-align: left; }
         
         input[type="time"], input[type="text"] { 
-            width: 100%; padding: 12px; font-size: 16px; font-weight: 600; font-family: inherit; 
+            width: 100%; padding: 12px; font-size: 16px; font-weight: 600; 
             text-align: center; border: 2px solid #dfe6e9; border-radius: 10px; 
             background-color: #fff; outline: none; color: #2d3436; 
-            transition: border-color 0.2s; -webkit-appearance: none;
+            -webkit-appearance: none;
         }
         input:focus { border-color: #2ed573; }
         input[type="text"] { text-align: left; font-weight: 400; font-size: 14px; }
 
-        /* CALENDAR WIDGET */
-        .calendar-wrapper { 
-            background: white; border-radius: 12px; padding: 15px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #dfe6e9; 
-            margin-bottom: 20px; min-height: 280px; /* Prevents collapse */
-        }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 600; font-size: 14px; }
-        .calendar-header button { 
-            width: 36px; height: 36px; padding: 0; 
-            background: #f1f2f6; color: #2d3436; 
-            border-radius: 8px; border: none; 
-            font-size: 18px; font-weight: 700; cursor: pointer; 
-        }
-        .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 700; color: #b2bec3; margin-bottom: 8px; }
+        /* Calendar */
+        .calendar-wrapper { background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #dfe6e9; margin-bottom: 20px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 600; font-size: 14px; }
+        .calendar-header button { width: 32px; height: 32px; padding: 0; background: transparent; color: #636e72; border-radius: 4px; border: none; font-size: 16px; cursor: pointer; }
+        .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; font-weight: 700; color: #b2bec3; margin-bottom: 5px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-day { 
-            height: 40px; display: flex; align-items: center; justify-content: center; 
-            font-size: 14px; border-radius: 8px; cursor: pointer; color: #2d3436; transition: background 0.1s; 
-        }
-        .cal-day:active { background-color: #f1f2f6; }
-        .cal-day.selected { background-color: #2ed573; color: white; font-weight: 600; box-shadow: 0 2px 4px rgba(46, 213, 115, 0.3); }
-        .cal-day.today { border: 2px solid #2ed573; }
-        .cal-day.past { color: #b2bec3; pointer-events: none; background-color: #fafafa; }
+        .cal-day { height: 36px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 6px; cursor: pointer; color: #2d3436; }
+        .cal-day.selected { background-color: #2ed573; color: white; font-weight: 600; }
+        .cal-day.today { border: 1px solid #2ed573; }
+        .cal-day.past { color: #b2bec3; pointer-events: none; }
         .cal-day.empty { pointer-events: none; }
 
-        /* SETTINGS BLOCKS */
+        /* Settings Blocks */
         .settings-block { background: #fff; border: 1px solid #dfe6e9; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .setting-row { display: flex; justify-content: space-between; align-items: center; }
         .setting-label { font-size: 14px; font-weight: 600; color: #636e72; }
-
-        /* TOGGLE SWITCH */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #2ed573; }
-        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        /* BUTTONS */
-        button.action-btn { width: 100%; padding: 16px; border: none; cursor: pointer; font-size: 16px; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
-        button.action-btn:active { transform: scale(0.98); background-color: #26af61; }
-
-        #status { margin-top: 20px; font-size: 14px; text-align: center; font-weight: 600; min-height: 20px; }
+        /* Buttons */
+        button.action-btn { width: 100%; padding: 14px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
+        button.secondary-btn { width: 100%; padding: 14px; border: 2px solid #dfe6e9; background: #fff; color: #636e72; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 15px; }
+        
+        #status { margin-top: 20px; font-size: 13px; text-align: center; font-weight: 500; min-height: 20px; }
         .text-error { color: #ff4757; }
         .text-success { color: #2ed573; }
+
+        /* Inline Schedule Area */
+        .hidden { display: none; }
+        #inlineScheduleArea { margin-top: 25px; border-top: 2px dashed #dfe6e9; padding-top: 20px; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #scheduleListContainer { background: #fff; border: 1px solid #dfe6e9; border-radius: 8px; padding: 10px; margin-top: 15px; text-align: left; }
+        .sched-item { padding: 8px 0; border-bottom: 1px solid #f1f2f6; color: #636e72; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .sched-date { font-weight: 700; color: #2d3436; }
+        .sched-tag { font-family: monospace; font-weight: 700; }
+        
+        .status-banner { text-align: center; padding: 8px; border-radius: 8px; margin-bottom: 10px; font-weight: 700; font-size: 12px; }
+        .banner-active { background: #e8f5e9; color: #2ed573; border: 1px solid #c8e6c9; }
+        .banner-inactive { background: #ffebee; color: #ff4757; border: 1px solid #ffcdd2; }
+
+        /* Refresh Button & Spinner */
+        .refresh-btn {
+            background: none; 
+            border: none; 
+            color: #2ed573; 
+            font-weight: bold; 
+            font-size: 12px; 
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .refresh-icon { transition: transform 0.5s; }
+        
+        /* SPIN ANIMATION */
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .spinning { animation: spin 1s linear infinite; }
+
     </style>
 </head>
 <body>
 
-    <h3>Auto Clocker Remote</h3>
-
-    <div class="input-group">
-        <div class="time-row">
-            <div class="time-col">
-                <label>Clock IN</label>
-                <input type="time" id="clockInTime">
-            </div>
-            <div class="time-col">
-                <label>Clock OUT</label>
-                <input type="time" id="clockOutTime">
+    <div id="inputView">
+        <div class="header">
+            <h3>Auto Clocker</h3>
+            <div class="header-right">
+                <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
             </div>
         </div>
 
-        <div class="calendar-wrapper">
-            <div class="calendar-header">
-                <button id="prevMonthBtn">&lt;</button>
-                <span id="currentMonthLabel">Loading...</span>
-                <button id="nextMonthBtn">&gt;</button>
+        <div class="input-group">
+            <div class="time-row">
+                <div class="time-col"><label>Clock IN</label><input type="time" id="clockInTime"></div>
+                <div class="time-col"><label>Clock OUT</label><input type="time" id="clockOutTime"></div>
             </div>
-            <div class="calendar-grid-header">
-                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+
+            <div class="calendar-wrapper">
+                <div class="calendar-header">
+                    <button id="prevMonthBtn">&lt;</button>
+                    <span id="currentMonthLabel"></span>
+                    <button id="nextMonthBtn">&gt;</button>
+                </div>
+                <div class="calendar-grid-header"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+                <div id="calendarGrid" class="calendar-grid"></div>
             </div>
-            <div id="calendarGrid" class="calendar-grid"></div>
+        </div>
+        
+        <button id="actionBtn" class="action-btn" onclick="sendSchedule()">Update PC Schedule</button>
+        
+        <div id="status"></div>
+
+        <div id="inlineScheduleArea" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="margin:0; color:#636e72;">Current Schedule</h4>
+                
+                <button class="refresh-btn" onclick="forceSync()">
+                    <svg id="refreshIcon" class="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M1 20v-6h6"></path>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+            <div id="pcStatusBanner" class="status-banner hidden"></div>
+            <div id="scheduleListContainer"></div>
+        </div>
+    </div>
+
+    <div id="settingsView" class="hidden">
+        <div class="header">
+            <svg onclick="showInputView()" class="back-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+            <h3>Settings</h3>
+            <div style="width:24px;"></div>
         </div>
 
         <div class="settings-block">
             <div class="setting-row">
                 <span class="setting-label">Randomise time (±5m)</span>
-                <label class="switch">
-                    <input type="checkbox" id="randomizeToggle">
-                    <span class="slider"></span>
-                </label>
+                <label class="switch"><input type="checkbox" id="randomizeToggle"><span class="slider"></span></label>
             </div>
         </div>
 
@@ -132,153 +182,179 @@
                 <input type="text" id="ntfyTopicInput" placeholder="Enter topic name...">
             </div>
         </div>
+        <div style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Changes are saved automatically</div>
     </div>
-    
-    <button id="actionBtn" class="action-btn" onclick="sendSchedule()">Update PC Schedule</button>
-    
-    <div id="status"></div>
 
     <script>
-        // Wrap everything in DOMContentLoaded to prevent premature execution
         document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- STATE ---
             let currentDate = new Date(); 
             let selectedDates = []; 
 
-            // --- DOM ELEMENTS ---
-            const calGrid = document.getElementById('calendarGrid');
-            const monthLabel = document.getElementById('currentMonthLabel');
+            // DOM
             const clockInInput = document.getElementById('clockInTime');
             const clockOutInput = document.getElementById('clockOutTime');
             const ntfyInput = document.getElementById('ntfyTopicInput');
             const randomizeToggle = document.getElementById('randomizeToggle');
+            const calGrid = document.getElementById('calendarGrid');
+            const monthLabel = document.getElementById('currentMonthLabel');
             const statusEl = document.getElementById('status');
-            const prevBtn = document.getElementById('prevMonthBtn');
-            const nextBtn = document.getElementById('nextMonthBtn');
+            const inputView = document.getElementById('inputView');
+            const settingsView = document.getElementById('settingsView');
+            const inlineScheduleArea = document.getElementById('inlineScheduleArea');
+            const listContainer = document.getElementById('scheduleListContainer');
+            const pcStatusBanner = document.getElementById('pcStatusBanner');
+            const refreshIcon = document.getElementById('refreshIcon'); // New icon
 
-            // --- CALENDAR LOGIC (Defined First) ---
-            function renderCalendar(date) {
-                if (!calGrid || !monthLabel) return; // Safety check
-
-                calGrid.innerHTML = "";
-                const year = date.getFullYear();
-                const month = date.getMonth();
-                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                monthLabel.textContent = `${monthNames[month]} ${year}`;
-
-                const firstDayIndex = new Date(year, month, 1).getDay(); 
-                const lastDay = new Date(year, month + 1, 0).getDate();
-                const todayDate = new Date(); todayDate.setHours(0,0,0,0);
-
-                // Empty Slots
-                for (let i = 0; i < firstDayIndex; i++) {
-                    const el = document.createElement("div");
-                    el.className = "cal-day empty";
-                    calGrid.appendChild(el);
-                }
-
-                // Days
-                for (let i = 1; i <= lastDay; i++) {
-                    const el = document.createElement("div");
-                    el.textContent = i;
-                    el.className = "cal-day";
-                    
-                    const checkDate = new Date(year, month, i);
-                    const y = checkDate.getFullYear();
-                    const m = String(checkDate.getMonth() + 1).padStart(2, '0');
-                    const d = String(checkDate.getDate()).padStart(2, '0');
-                    const dateStr = `${y}-${m}-${d}`;
-
-                    if (checkDate < todayDate) el.classList.add("past");
-                    else {
-                        el.onclick = () => {
-                            if (selectedDates.includes(dateStr)) {
-                                selectedDates = selectedDates.filter(d => d !== dateStr);
-                                el.classList.remove("selected");
-                            } else {
-                                selectedDates.push(dateStr);
-                                el.classList.add("selected");
-                            }
-                        };
-                        if (selectedDates.includes(dateStr)) el.classList.add("selected");
-                        
-                        const tStr = new Date().toISOString().split('T')[0];
-                        if (dateStr === tStr) el.classList.add("today");
-                    }
-                    calGrid.appendChild(el);
-                }
-            }
-
-            // Initialize Calendar immediately
-            if(prevBtn) prevBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(currentDate); };
-            if(nextBtn) nextBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(currentDate); };
-            
-            renderCalendar(currentDate);
-
-            // --- LOAD SETTINGS (Wrapped in try-catch) ---
+            // Settings
             try {
                 const storedTopic = localStorage.getItem('ntfyTopic');
                 if(storedTopic && ntfyInput) ntfyInput.value = storedTopic;
-
                 const storedRandom = localStorage.getItem('isRandomized');
                 if(storedRandom === 'true' && randomizeToggle) randomizeToggle.checked = true;
 
                 if(ntfyInput) ntfyInput.addEventListener('input', () => localStorage.setItem('ntfyTopic', ntfyInput.value.trim()));
                 if(randomizeToggle) randomizeToggle.addEventListener('change', () => localStorage.setItem('isRandomized', randomizeToggle.checked));
-            } catch (e) {
-                console.log("Settings load error:", e);
-            }
+            } catch(e){}
 
-            // --- SEND LOGIC (Attached via JS instead of inline HTML) ---
-            window.sendSchedule = async function() {
-                const topic = ntfyInput ? ntfyInput.value.trim() : "";
-                const inTime = clockInInput ? clockInInput.value : "";
-                const outTime = clockOutInput ? clockOutInput.value : "";
-                const isRandom = randomizeToggle ? randomizeToggle.checked : false;
+            // Navigation
+            window.showInputView = () => { settingsView.classList.add('hidden'); inputView.classList.remove('hidden'); statusEl.textContent = ''; };
+            window.showSettingsView = () => { inputView.classList.add('hidden'); settingsView.classList.remove('hidden'); };
 
-                if(!topic) return showStatus("Please enter a Ntfy Topic.", "error");
-                if(selectedDates.length === 0) return showStatus("Select at least one date.", "error");
-                if(!inTime && !outTime) return showStatus("Set at least one time.", "error");
+            // Calendar
+            function renderCalendar(date) {
+                if(!calGrid) return;
+                calGrid.innerHTML = "";
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                monthLabel.textContent = `${monthNames[month]} ${year}`;
+                const firstDayIndex = new Date(year, month, 1).getDay(); 
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                const todayDate = new Date(); todayDate.setHours(0,0,0,0);
 
-                const payload = {
-                    type: "REMOTE_UPDATE",
-                    dates: selectedDates.sort(),
-                    clockIn: inTime,
-                    clockOut: outTime,
-                    isRandomized: isRandom
-                };
-
-                const dateDisplays = selectedDates.map(d => d.split('-')[2]).join(", ");
-                const humanBody = `IN: ${inTime || '--'} | OUT: ${outTime || '--'}\nDays: ${dateDisplays}\n${isRandom ? '(Randomised)' : ''}`;
-
-                showStatus("Sending...", "normal");
-
-                try {
-                    await fetch(`https://ntfy.sh/${topic}`, {
-                        method: 'POST',
-                        body: JSON.stringify(payload),
-                        headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' }
-                    });
-
-                    await fetch(`https://ntfy.sh/${topic}`, {
-                        method: 'POST',
-                        body: humanBody,
-                        headers: { 'Title': 'Schedule Updated', 'Priority': '4', 'Tags': 'calendar' }
-                    });
-
-                    showStatus("Sent! PC syncing...", "success");
-
-                } catch (err) {
-                    showStatus("Network Error.", "error");
+                for (let i = 0; i < firstDayIndex; i++) calGrid.appendChild(Object.assign(document.createElement("div"), {className: "cal-day empty"}));
+                for (let i = 1; i <= lastDay; i++) {
+                    const el = document.createElement("div"); el.textContent = i; el.className = "cal-day";
+                    const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                    const checkDate = new Date(year, month, i);
+                    
+                    if (checkDate < todayDate) el.classList.add("past");
+                    else {
+                        el.onclick = () => {
+                            if (selectedDates.includes(dStr)) { selectedDates = selectedDates.filter(d => d !== dStr); el.classList.remove("selected"); }
+                            else { selectedDates.push(dStr); el.classList.add("selected"); }
+                        };
+                        if (selectedDates.includes(dStr)) el.classList.add("selected");
+                        if (dStr === new Date().toISOString().split('T')[0]) el.classList.add("today");
+                    }
+                    calGrid.appendChild(el);
                 }
+            }
+            document.getElementById('prevMonthBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(currentDate); };
+            document.getElementById('nextMonthBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(currentDate); };
+            renderCalendar(currentDate);
+
+            // Send
+            window.sendSchedule = async function() {
+                const topic = ntfyInput.value.trim();
+                if(!topic) return showStatus("Please check Settings > Ntfy Topic", "error");
+                if(selectedDates.length === 0) return showStatus("Select at least one date.", "error");
+                
+                const payload = { type: "REMOTE_UPDATE", dates: selectedDates.sort(), clockIn: clockInInput.value, clockOut: clockOutInput.value, isRandomized: randomizeToggle.checked };
+                showStatus("Sending...", "normal");
+                try {
+                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
+                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: 'New Schedule', headers: { 'Title': 'Schedule Updated', 'Priority': '4', 'Tags': 'calendar' } });
+                    showStatus("Sent! Wait for PC confirmation.", "success");
+                } catch (err) { showStatus("Network Error.", "error"); }
             };
 
             function showStatus(msg, type) {
-                if(!statusEl) return;
                 statusEl.textContent = msg;
                 statusEl.className = type === "error" ? "text-error" : (type === "success" ? "text-success" : "");
             }
+
+            // Fetch Status
+            window.fetchPCStatus = async function(isForce = false) {
+                const topic = ntfyInput.value.trim();
+                if(!topic) return;
+                
+                inlineScheduleArea.classList.remove('hidden'); 
+                if(!isForce) listContainer.innerHTML = '<div style="text-align:center;padding:10px;color:#ccc;">Checking...</div>';
+                pcStatusBanner.classList.add('hidden');
+
+                try {
+                    const res = await fetch(`https://ntfy.sh/${topic}/json?since=6h&poll=1`);
+                    const text = await res.text();
+                    const lines = text.trim().split('\n');
+                    let lastState = null;
+
+                    for (let i = lines.length - 1; i >= 0; i--) {
+                        try {
+                            const msg = JSON.parse(lines[i]);
+                            const data = JSON.parse(msg.message);
+                            if (data.type === "PC_STATUS_SYNC") { lastState = data; break; }
+                        } catch(e){}
+                    }
+
+                    if (lastState) renderPCState(lastState);
+                    else {
+                        if (!isForce) { listContainer.innerHTML = '<div style="text-align:center;padding:10px;">No recent status. Pinging...</div>'; forceSync(); }
+                        else listContainer.innerHTML = '<div style="text-align:center;padding:10px;color:#ff4757;">PC did not respond.</div>';
+                    }
+                } catch(err) { listContainer.innerHTML = '<div style="text-align:center;color:#ff4757;">Connection Error.</div>'; }
+            };
+
+            // --- UPDATED FORCE SYNC WITH ANIMATION ---
+            window.forceSync = async function() {
+                const topic = ntfyInput.value.trim();
+                if(refreshIcon) refreshIcon.classList.add('spinning'); // START SPIN
+
+                try {
+                    // 1. Send Ping
+                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
+                    
+                    // 2. Wait 3 seconds for PC to reply
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    // 3. Check Status Again
+                    await fetchPCStatus(true);
+                } catch(e) {
+                    console.log(e);
+                } finally {
+                    if(refreshIcon) refreshIcon.classList.remove('spinning'); // STOP SPIN
+                }
+            };
+
+            function renderPCState(data) {
+                pcStatusBanner.classList.remove('hidden', 'banner-active', 'banner-inactive');
+                if (data.isActive) { pcStatusBanner.textContent = "EXTENSION IS ACTIVE"; pcStatusBanner.classList.add('banner-active'); }
+                else { pcStatusBanner.textContent = "EXTENSION IS INACTIVE"; pcStatusBanner.classList.add('banner-inactive'); }
+
+                if (!data.tasks || data.tasks.length === 0) { listContainer.innerHTML = '<div style="text-align:center;color:#b2bec3;padding:10px;">Schedule is empty.</div>'; return; }
+
+                listContainer.innerHTML = "";
+                const grouped = {};
+                data.tasks.forEach(t => { if (!grouped[t.dateStr]) grouped[t.dateStr] = []; grouped[t.dateStr].push(t); });
+
+                for (const [dateStr, dateTasks] of Object.entries(grouped)) {
+                    const item = document.createElement('div'); item.className = 'sched-item';
+                    const [yy, mm, dd] = dateStr.split('-');
+                    const d = new Date(yy, mm - 1, dd);
+                    const dateDisplay = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    
+                    const timeDetails = dateTasks.map(t => {
+                        const dt = new Date(t.timestamp);
+                        const timeStr = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                        return `<span style="color:${t.action==='IN'?'#2ed573':'#ff4757'}">${t.action}</span> <span class="sched-tag">${timeStr}</span>`;
+                    }).join(" | ");
+                    item.innerHTML = `<span class="sched-date">${dateDisplay}</span> <div>${timeDetails}</div>`;
+                    listContainer.appendChild(item);
+                }
+            }
+
+            // AUTO-INIT
+            if (ntfyInput.value) fetchPCStatus();
         });
     </script>
 </body>
