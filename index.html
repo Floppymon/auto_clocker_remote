@@ -5,34 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Auto Clocker Remote</title>
     <meta name="theme-color" content="#f8f9fa">
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="icon" href="data:,">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0byBDbG9ja2VyIFJlbW90ZSIsInNob3J0X25hbWUiOiJDbG9ja2VyIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjMmVkNTczIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
     
     <style>
-        /* --- RESET & BASE STYLES --- */
+        /* --- STYLES --- */
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f8f9fa; color: #333; margin: 0; padding: 20px;
             max-width: 400px; margin-left: auto; margin-right: auto;
-            overscroll-behavior-y: none; /* Disables pull-to-refresh */
+            overscroll-behavior-y: none; 
         }
 
-        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; height: 30px; }
         .header h3 { margin: 0; font-size: 18px; font-weight: 800; color: #636e72; }
         .header-right { display: flex; align-items: center; }
 
-        /* Icons */
         .settings-icon, .back-icon { cursor: pointer; padding: 4px; transition: transform 0.2s ease; color: #636e72; }
         .settings-icon:hover { transform: rotate(30deg); }
         .back-icon:hover { transform: translateX(-2px); }
 
-        /* Inputs */
         .input-group { margin-bottom: 5px; text-align: center; }
-        
         .time-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
         .time-col { display: flex; flex-direction: column; flex: 1; }
         .time-col label { font-size: 11px; font-weight: 700; color: #636e72; margin-bottom: 4px; text-align: left; }
@@ -46,7 +40,6 @@
         input:focus { border-color: #2ed573; }
         input[type="text"] { text-align: left; font-weight: 400; font-size: 14px; }
 
-        /* Calendar */
         .calendar-wrapper { background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #dfe6e9; margin-bottom: 20px; }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 600; font-size: 14px; }
         .calendar-header button { width: 32px; height: 32px; padding: 0; background: transparent; color: #636e72; border-radius: 4px; border: none; font-size: 16px; cursor: pointer; }
@@ -58,7 +51,6 @@
         .cal-day.past { color: #b2bec3; pointer-events: none; }
         .cal-day.empty { pointer-events: none; }
 
-        /* Settings Blocks */
         .settings-block { background: #fff; border: 1px solid #dfe6e9; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .setting-row { display: flex; justify-content: space-between; align-items: center; }
         .setting-label { font-size: 14px; font-weight: 600; color: #636e72; }
@@ -69,22 +61,24 @@
         input:checked + .slider { background-color: #2ed573; }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        /* Buttons */
         button.action-btn { width: 100%; padding: 14px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
-        button.secondary-btn { width: 100%; padding: 14px; border: 2px solid #dfe6e9; background: #fff; color: #636e72; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 15px; }
         
-        #status { 
-            margin-top: 0; 
-            font-size: 13px; 
-            text-align: center; 
-            font-weight: 500; 
-            display: none; 
+        /* NEW: Deactivate Button */
+        button.deactivate-btn { 
+            width: 100%; padding: 12px; 
+            border: 2px solid #ffebee; 
+            background: #fff5f5; 
+            color: #ff4757; 
+            font-size: 14px; font-weight: 700; 
+            border-radius: 10px; cursor: pointer; margin-top: 15px; 
         }
+        button.deactivate-btn:active { background: #ffeded; }
+
+        #status { margin-top: 0; font-size: 13px; text-align: center; font-weight: 500; display: none; }
         #status.visible { display: block; margin-top: 20px; }
         .text-error { color: #ff4757; }
         .text-success { color: #2ed573; }
 
-        /* Inline Schedule Area */
         .hidden { display: none; }
         #inlineScheduleArea { margin-top: 25px; border-top: 2px dashed #dfe6e9; padding-top: 20px; animation: slideDown 0.3s ease-out; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -98,14 +92,10 @@
         .banner-active { background: #e8f5e9; color: #2ed573; border: 1px solid #c8e6c9; }
         .banner-inactive { background: #ffebee; color: #ff4757; border: 1px solid #ffcdd2; }
 
-        .refresh-btn {
-            background: none; border: none; color: #2ed573; font-weight: bold; font-size: 12px; 
-            cursor: pointer; display: flex; align-items: center; gap: 5px;
-        }
+        .refresh-btn { background: none; border: none; color: #2ed573; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .refresh-icon { transition: transform 0.5s; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinning { animation: spin 1s linear infinite; }
-
     </style>
 </head>
 <body>
@@ -114,10 +104,7 @@
         <div class="header">
             <h3>Auto Clocker Remote</h3>
             <div class="header-right">
-                <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
+                <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </div>
         </div>
 
@@ -146,16 +133,14 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h4 style="margin:0; color:#636e72;">Current Schedule</h4>
                 <button class="refresh-btn" onclick="forceSync()">
-                    <svg id="refreshIcon" class="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M23 4v6h-6"></path>
-                        <path d="M1 20v-6h6"></path>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                    </svg>
+                    <svg id="refreshIcon" class="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     Refresh
                 </button>
             </div>
             <div id="pcStatusBanner" class="status-banner hidden"></div>
             <div id="scheduleListContainer"></div>
+            
+            <button id="deactivateBtn" class="deactivate-btn hidden" onclick="deactivateSchedule()">Deactivate Schedule</button>
         </div>
     </div>
 
@@ -165,34 +150,22 @@
             <h3>Settings</h3>
             <div style="width:24px;"></div>
         </div>
-
         <div class="settings-block">
-            <div class="setting-row">
-                <span class="setting-label">Randomise time (±5m)</span>
-                <label class="switch"><input type="checkbox" id="randomizeToggle"><span class="slider"></span></label>
-            </div>
+            <div class="setting-row"><span class="setting-label">Randomise time (±5m)</span><label class="switch"><input type="checkbox" id="randomizeToggle"><span class="slider"></span></label></div>
         </div>
-
         <div class="settings-block">
-            <div class="time-col">
-                <label style="margin-bottom: 8px;">Ntfy Topic</label>
-                <input type="text" id="ntfyTopicInput" placeholder="Enter topic name...">
-            </div>
+            <div class="time-col"><label style="margin-bottom: 8px;">Ntfy Topic</label><input type="text" id="ntfyTopicInput" placeholder="Enter topic name..."></div>
         </div>
         <div style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Changes are saved automatically</div>
     </div>
 
     <script>
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(console.log);
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.log);
 
         document.addEventListener('DOMContentLoaded', () => {
             let currentDate = new Date(); 
             let selectedDates = []; 
 
-            // DOM
             const clockInInput = document.getElementById('clockInTime');
             const clockOutInput = document.getElementById('clockOutTime');
             const ntfyInput = document.getElementById('ntfyTopicInput');
@@ -206,8 +179,8 @@
             const listContainer = document.getElementById('scheduleListContainer');
             const pcStatusBanner = document.getElementById('pcStatusBanner');
             const refreshIcon = document.getElementById('refreshIcon');
+            const deactivateBtn = document.getElementById('deactivateBtn'); // New btn
 
-            // Settings
             try {
                 const storedTopic = localStorage.getItem('ntfyTopic');
                 if(storedTopic && ntfyInput) ntfyInput.value = storedTopic;
@@ -218,11 +191,9 @@
                 if(randomizeToggle) randomizeToggle.addEventListener('change', () => localStorage.setItem('isRandomized', randomizeToggle.checked));
             } catch(e){}
 
-            // Navigation
             window.showInputView = () => { settingsView.classList.add('hidden'); inputView.classList.remove('hidden'); showStatus(''); };
             window.showSettingsView = () => { inputView.classList.add('hidden'); settingsView.classList.remove('hidden'); };
 
-            // Calendar
             function renderCalendar(date) {
                 if(!calGrid) return;
                 calGrid.innerHTML = "";
@@ -239,7 +210,6 @@
                     const el = document.createElement("div"); el.textContent = i; el.className = "cal-day";
                     const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                     const checkDate = new Date(year, month, i);
-                    
                     if (checkDate < todayDate) el.classList.add("past");
                     else {
                         el.onclick = () => {
@@ -256,7 +226,6 @@
             document.getElementById('nextMonthBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(currentDate); };
             renderCalendar(currentDate);
 
-            // Send
             window.sendSchedule = async function() {
                 const topic = ntfyInput.value.trim();
                 if(!topic) return showStatus("Please check Settings > Ntfy Topic", "error");
@@ -266,9 +235,24 @@
                 showStatus("Sending...", "normal");
                 try {
                     await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
-                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: 'New Schedule', headers: { 'Title': 'Schedule Updated', 'Priority': '4', 'Tags': 'calendar' } });
                     showStatus("Sent! Wait for PC confirmation.", "success");
                 } catch (err) { showStatus("Network Error.", "error"); }
+            };
+
+            // NEW: Deactivate Logic
+            window.deactivateSchedule = async function() {
+                const topic = ntfyInput.value.trim();
+                if (!confirm("Are you sure you want to stop the schedule?")) return;
+                
+                try {
+                    await fetch(`https://ntfy.sh/${topic}`, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ type: "REMOTE_STOP" }), 
+                        headers: { 'Title': 'Internal_Data', 'Priority': '1' } 
+                    });
+                    // Refresh UI after delay
+                    setTimeout(() => fetchPCStatus(true), 2000);
+                } catch(e) { showStatus("Error sending stop command", "error"); }
             };
 
             function showStatus(msg, type) {
@@ -278,12 +262,9 @@
                     statusEl.classList.add('visible');
                     if (type === "error") statusEl.classList.add('text-error');
                     if (type === "success") statusEl.classList.add('text-success');
-                } else {
-                    statusEl.classList.remove('visible');
-                }
+                } else { statusEl.classList.remove('visible'); }
             }
 
-            // Fetch Status
             window.fetchPCStatus = async function(isForce = false) {
                 const topic = ntfyInput.value.trim();
                 if(!topic) return;
@@ -317,22 +298,25 @@
             window.forceSync = async function() {
                 const topic = ntfyInput.value.trim();
                 if(refreshIcon) refreshIcon.classList.add('spinning'); 
-
                 try {
                     await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     await fetchPCStatus(true);
-                } catch(e) {
-                    console.log(e);
-                } finally {
-                    if(refreshIcon) refreshIcon.classList.remove('spinning'); 
-                }
+                } catch(e) { console.log(e); } 
+                finally { if(refreshIcon) refreshIcon.classList.remove('spinning'); }
             };
 
             function renderPCState(data) {
                 pcStatusBanner.classList.remove('hidden', 'banner-active', 'banner-inactive');
-                if (data.isActive) { pcStatusBanner.textContent = "EXTENSION IS ACTIVE"; pcStatusBanner.classList.add('banner-active'); }
-                else { pcStatusBanner.textContent = "EXTENSION IS INACTIVE"; pcStatusBanner.classList.add('banner-inactive'); }
+                if (data.isActive) { 
+                    pcStatusBanner.textContent = "EXTENSION IS ACTIVE"; 
+                    pcStatusBanner.classList.add('banner-active');
+                    deactivateBtn.classList.remove('hidden'); // Show button
+                } else { 
+                    pcStatusBanner.textContent = "EXTENSION IS INACTIVE"; 
+                    pcStatusBanner.classList.add('banner-inactive'); 
+                    deactivateBtn.classList.add('hidden'); // Hide button
+                }
 
                 if (!data.tasks || data.tasks.length === 0) { listContainer.innerHTML = '<div style="text-align:center;color:#b2bec3;padding:10px;">Schedule is empty.</div>'; return; }
 
@@ -356,7 +340,6 @@
                 }
             }
 
-            // AUTO-INIT
             if (ntfyInput.value) fetchPCStatus();
         });
     </script>
