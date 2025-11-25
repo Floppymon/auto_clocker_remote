@@ -5,34 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Auto Clocker Remote</title>
     <meta name="theme-color" content="#f8f9fa">
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="icon" href="data:,">
+    <link rel="manifest" href="manifest.json">
     
     <style>
-        /* --- RESET & BASE STYLES --- */
+        /* --- STYLES --- */
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f8f9fa; color: #333; margin: 0; padding: 20px;
             max-width: 400px; margin-left: auto; margin-right: auto;
-            overscroll-behavior-y: none; /* Disables pull-to-refresh */
+            overscroll-behavior-y: none; 
         }
 
         /* Header */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; height: 40px; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            min-height: 40px; /* FIX: Increased height to prevent clipping */
+        }
         .header h3 { margin: 0; font-size: 18px; font-weight: 800; color: #636e72; }
         .header-right { display: flex; align-items: center; }
 
-        /* Icons / Buttons */
-        .icon-btn {
-            background: none; border: none; cursor: pointer; padding: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: #636e72; transition: transform 0.2s ease;
+        /* Icons */
+        .settings-icon, .back-icon { 
+            cursor: pointer; 
+            padding: 4px; 
+            width: 32px;  /* FIX: Explicit width ensures padding doesn't squash icon */
+            height: 32px; /* FIX: Explicit height */
+            transition: transform 0.2s ease; 
+            color: #636e72; 
+            display: block;
         }
-        .icon-btn:hover { transform: rotate(30deg); color: #2d3436; }
-        .icon-btn.back:hover { transform: translateX(-2px); }
+        .settings-icon:hover { transform: rotate(30deg); }
+        .back-icon:hover { transform: translateX(-2px); }
 
         /* Inputs */
         .input-group { margin-bottom: 5px; text-align: center; }
@@ -75,6 +83,7 @@
 
         /* Buttons */
         button.action-btn { width: 100%; padding: 14px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
+        button.secondary-btn { width: 100%; padding: 14px; border: 2px solid #dfe6e9; background: #fff; color: #636e72; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 15px; }
         
         /* Deactivate Button */
         button.deactivate-btn { 
@@ -130,12 +139,10 @@
         <div class="header">
             <h3>Auto Clocker Remote</h3>
             <div class="header-right">
-                <button class="icon-btn" onclick="showSettingsView()">
-                    <svg class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                </button>
+                <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
             </div>
         </div>
 
@@ -183,13 +190,10 @@
 
     <div id="settingsView" class="hidden">
         <div class="header">
-            <button class="icon-btn back" onclick="showInputView()">
-                <svg class="back-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
-                </svg>
-            </button>
+            <svg onclick="showInputView()" class="back-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
             <h3>Settings</h3>
-            <div style="width:40px;"></div> </div>
+            <div style="width:24px;"></div>
+        </div>
 
         <div class="settings-block">
             <div class="setting-row">
@@ -240,16 +244,9 @@
                 if(storedTopic && ntfyInput) ntfyInput.value = storedTopic;
                 const storedRandom = localStorage.getItem('isRandomized');
                 if(storedRandom === 'true' && randomizeToggle) randomizeToggle.checked = true;
-                
-                const storedIn = localStorage.getItem('clockInTime');
-                if(storedIn && clockInInput) clockInInput.value = storedIn;
-                const storedOut = localStorage.getItem('clockOutTime');
-                if(storedOut && clockOutInput) clockOutInput.value = storedOut;
 
                 if(ntfyInput) ntfyInput.addEventListener('input', () => localStorage.setItem('ntfyTopic', ntfyInput.value.trim()));
                 if(randomizeToggle) randomizeToggle.addEventListener('change', () => localStorage.setItem('isRandomized', randomizeToggle.checked));
-                if(clockInInput) clockInInput.addEventListener('input', () => localStorage.setItem('clockInTime', clockInInput.value));
-                if(clockOutInput) clockOutInput.addEventListener('input', () => localStorage.setItem('clockOutTime', clockOutInput.value));
             } catch(e){}
 
             // Navigation
@@ -293,14 +290,20 @@
             // Send
             window.sendSchedule = async function() {
                 const topic = ntfyInput.value.trim();
+
+                // --- ADDED VALIDATION HERE ---
+                const validName = /^[a-zA-Z0-9_\-]+$/.test(topic);
+                if (!validName) return showStatus("Use only letters, numbers, - and _", "error");
+                // -----------------------------
+
                 if(!topic) return showStatus("Please check Settings > Ntfy Topic", "error");
                 if(selectedDates.length === 0) return showStatus("Select at least one date.", "error");
                 
                 const payload = { type: "REMOTE_UPDATE", dates: selectedDates.sort(), clockIn: clockInInput.value, clockOut: clockOutInput.value, isRandomized: randomizeToggle.checked };
                 showStatus("Sending...", "normal");
                 try {
-                    // Send data to Shadow Topic (-cmd)
-                    await fetch(`https://ntfy.sh/${topic}-cmd`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
+                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
+                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: 'New Schedule', headers: { 'Title': 'Schedule Updated', 'Priority': '4', 'Tags': 'calendar' } });
                     showStatus("Sent! Wait for PC confirmation.", "success");
                 } catch (err) { showStatus("Network Error.", "error"); }
             };
@@ -313,15 +316,20 @@
                 deactivateStatus.className = "text-normal visible";
 
                 try {
-                    // Send data to Shadow Topic (-cmd)
-                    await fetch(`https://ntfy.sh/${topic}-cmd`, { 
+                    await fetch(`https://ntfy.sh/${topic}`, { 
                         method: 'POST', 
                         body: JSON.stringify({ type: "REMOTE_STOP" }), 
                         headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } 
                     });
 
+                    await fetch(`https://ntfy.sh/${topic}`, { 
+                        method: 'POST', 
+                        body: "The active schedule has been cancelled.", 
+                        headers: { 'Title': 'Schedule Cancelled', 'Priority': 'high', 'Tags': 'stop_sign' } 
+                    });
+
                     deactivateStatus.textContent = "Success! Schedule Cancelled.";
-                    deactivateStatus.className = "text-error visible"; // Red Success Message
+                    deactivateStatus.className = "text-error visible";
 
                     setTimeout(() => {
                         fetchPCStatus(true);
@@ -347,7 +355,7 @@
                 }
             }
 
-            // Fetch Status (Shadow Topic)
+            // Fetch Status
             window.fetchPCStatus = async function(isForce = false) {
                 const topic = ntfyInput.value.trim();
                 if(!topic) return;
@@ -357,7 +365,7 @@
                 pcStatusBanner.classList.add('hidden');
 
                 try {
-                    const res = await fetch(`https://ntfy.sh/${topic}-cmd/json?since=6h&poll=1`);
+                    const res = await fetch(`https://ntfy.sh/${topic}/json?since=6h&poll=1`);
                     const text = await res.text();
                     const lines = text.trim().split('\n');
                     let lastState = null;
@@ -378,51 +386,19 @@
                 } catch(err) { listContainer.innerHTML = '<div style="text-align:center;color:#ff4757;">Connection Error.</div>'; }
             };
 
-            // Smart Force Sync
             window.forceSync = async function() {
                 const topic = ntfyInput.value.trim();
                 if(refreshIcon) refreshIcon.classList.add('spinning'); 
-                
-                // 30s buffer for clock drift
-                const clickTime = Date.now() - 30000;
 
                 try {
-                    await fetch(`https://ntfy.sh/${topic}-cmd`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
-
-                    // Wait Loop (Max 60s)
-                    let attempts = 0;
-                    const maxAttempts = 30; 
-
-                    const checkLoop = setInterval(async () => {
-                        attempts++;
-                        if (attempts > maxAttempts) {
-                            clearInterval(checkLoop);
-                            if(refreshIcon) refreshIcon.classList.remove('spinning');
-                            return;
-                        }
-
-                        try {
-                            const res = await fetch(`https://ntfy.sh/${topic}-cmd/json?since=2m&poll=1`);
-                            const text = await res.text();
-                            const lines = text.trim().split('\n');
-                            
-                            for (let i = lines.length - 1; i >= 0; i--) {
-                                try {
-                                    const msg = JSON.parse(lines[i]);
-                                    const data = JSON.parse(msg.message);
-                                    
-                                    if (data.type === "PC_STATUS_SYNC" && data.lastUpdate > clickTime) {
-                                        clearInterval(checkLoop);
-                                        renderPCState(data);
-                                        if(refreshIcon) refreshIcon.classList.remove('spinning');
-                                        return;
-                                    }
-                                } catch(e){}
-                            }
-                        } catch(e) {}
-                    }, 2000);
-
-                } catch(e) { if(refreshIcon) refreshIcon.classList.remove('spinning'); }
+                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await fetchPCStatus(true);
+                } catch(e) {
+                    console.log(e);
+                } finally {
+                    if(refreshIcon) refreshIcon.classList.remove('spinning'); 
+                }
             };
 
             function renderPCState(data) {
@@ -459,6 +435,7 @@
                 }
             }
 
+            // AUTO-INIT
             if (ntfyInput.value) fetchPCStatus();
         });
     </script>
