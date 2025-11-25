@@ -82,10 +82,18 @@
         }
         button.deactivate-btn:active { background: #ffeded; }
 
-        #status { margin-top: 0; font-size: 13px; text-align: center; font-weight: 500; display: none; }
-        #status.visible { display: block; margin-top: 20px; }
+        /* STATUS MESSAGES */
+        #status, #deactivateStatus { 
+            margin-top: 0; 
+            font-size: 13px; 
+            text-align: center; 
+            font-weight: 500; 
+            display: none; 
+        }
+        #status.visible, #deactivateStatus.visible { display: block; margin-top: 20px; }
         .text-error { color: #ff4757; }
         .text-success { color: #2ed573; }
+        .text-normal { color: #636e72; }
 
         /* Inline Schedule Area */
         .hidden { display: none; }
@@ -161,6 +169,8 @@
             <div id="scheduleListContainer"></div>
             
             <button id="deactivateBtn" class="deactivate-btn hidden" onclick="deactivateSchedule()">Deactivate Schedule</button>
+            
+            <div id="deactivateStatus"></div>
         </div>
     </div>
 
@@ -212,6 +222,7 @@
             const pcStatusBanner = document.getElementById('pcStatusBanner');
             const refreshIcon = document.getElementById('refreshIcon');
             const deactivateBtn = document.getElementById('deactivateBtn');
+            const deactivateStatus = document.getElementById('deactivateStatus');
 
             // Settings
             try {
@@ -277,19 +288,40 @@
                 } catch (err) { showStatus("Network Error.", "error"); }
             };
 
-            // UPDATED: Deactivate without confirmation
+            // Deactivate
             window.deactivateSchedule = async function() {
                 const topic = ntfyInput.value.trim();
                 
+                deactivateStatus.textContent = "Cancelling...";
+                deactivateStatus.className = "text-normal visible";
+
                 try {
                     await fetch(`https://ntfy.sh/${topic}`, { 
                         method: 'POST', 
                         body: JSON.stringify({ type: "REMOTE_STOP" }), 
-                        headers: { 'Title': 'Internal_Data', 'Priority': '1' } 
+                        headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } 
                     });
-                    // Refresh UI after delay
-                    setTimeout(() => fetchPCStatus(true), 2000);
-                } catch(e) { showStatus("Error sending stop command", "error"); }
+
+                    await fetch(`https://ntfy.sh/${topic}`, { 
+                        method: 'POST', 
+                        body: "The active schedule has been cancelled.", 
+                        headers: { 'Title': 'Schedule Cancelled', 'Priority': 'high', 'Tags': 'stop_sign' } 
+                    });
+
+                    // UPDATED: Used text-error (Red) for "Success! Cancelled"
+                    deactivateStatus.textContent = "Success! Schedule Cancelled.";
+                    deactivateStatus.className = "text-error visible";
+
+                    setTimeout(() => {
+                        fetchPCStatus(true);
+                        deactivateStatus.className = ""; 
+                        deactivateStatus.textContent = "";
+                    }, 2000);
+
+                } catch(e) { 
+                    deactivateStatus.textContent = "Error sending stop command";
+                    deactivateStatus.className = "text-error visible";
+                }
             };
 
             function showStatus(msg, type) {
