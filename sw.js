@@ -1,5 +1,5 @@
-// sw.js
-const CACHE_NAME = 'clocker-remote-v5'; // <--- Bumped to v5
+//
+const CACHE_NAME = 'clocker-remote-v3'; // <--- Bumped version
 const ASSETS = [
   './',
   './index.html',
@@ -20,6 +20,7 @@ self.addEventListener('fetch', (e) => {
   );
 });
 
+// NEW: Delete old caches (Clean up v1 and v2)
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
