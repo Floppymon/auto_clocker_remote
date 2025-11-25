@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Auto Clocker Remote</title>
     <meta name="theme-color" content="#f8f9fa">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="icon" href="data:,">
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0byBDbG9ja2VyIFJlbW90ZSIsInNob3J0X25hbWUiOiJDbG9ja2VyIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjMmVkNTczIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
     
     <style>
-        /* --- STYLES --- */
+        /* --- RESET & BASE STYLES --- */
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f8f9fa; color: #333; margin: 0; padding: 20px;
             max-width: 400px; margin-left: auto; margin-right: auto;
-            overscroll-behavior-y: none; 
+            overscroll-behavior-y: none; /* Disables pull-to-refresh */
         }
 
         /* Header */
@@ -127,7 +129,7 @@
             <div class="header-right">
                 <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
             </div>
         </div>
@@ -282,8 +284,8 @@
                 const payload = { type: "REMOTE_UPDATE", dates: selectedDates.sort(), clockIn: clockInInput.value, clockOut: clockOutInput.value, isRandomized: randomizeToggle.checked };
                 showStatus("Sending...", "normal");
                 try {
-                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
-                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: 'New Schedule', headers: { 'Title': 'Schedule Updated', 'Priority': '4', 'Tags': 'calendar' } });
+                    // SEND TO HIDDEN SHADOW TOPIC
+                    await fetch(`https://ntfy.sh/${topic}-cmd`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
                     showStatus("Sent! Wait for PC confirmation.", "success");
                 } catch (err) { showStatus("Network Error.", "error"); }
             };
@@ -296,16 +298,11 @@
                 deactivateStatus.className = "text-normal visible";
 
                 try {
-                    await fetch(`https://ntfy.sh/${topic}`, { 
+                    // SEND TO HIDDEN SHADOW TOPIC
+                    await fetch(`https://ntfy.sh/${topic}-cmd`, { 
                         method: 'POST', 
                         body: JSON.stringify({ type: "REMOTE_STOP" }), 
                         headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } 
-                    });
-
-                    await fetch(`https://ntfy.sh/${topic}`, { 
-                        method: 'POST', 
-                        body: "The active schedule has been cancelled.", 
-                        headers: { 'Title': 'Schedule Cancelled', 'Priority': 'high', 'Tags': 'stop_sign' } 
                     });
 
                     // UPDATED: Used text-error (Red) for "Success! Cancelled"
@@ -346,7 +343,8 @@
                 pcStatusBanner.classList.add('hidden');
 
                 try {
-                    const res = await fetch(`https://ntfy.sh/${topic}/json?since=6h&poll=1`);
+                    // FETCH FROM SHADOW TOPIC (PC sends data here now)
+                    const res = await fetch(`https://ntfy.sh/${topic}-cmd/json?since=6h&poll=1`);
                     const text = await res.text();
                     const lines = text.trim().split('\n');
                     let lastState = null;
@@ -372,7 +370,8 @@
                 if(refreshIcon) refreshIcon.classList.add('spinning'); 
 
                 try {
-                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
+                    // SEND TO SHADOW TOPIC
+                    await fetch(`https://ntfy.sh/${topic}-cmd`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     await fetchPCStatus(true);
                 } catch(e) {
