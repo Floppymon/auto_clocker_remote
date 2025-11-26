@@ -72,6 +72,10 @@
         button.action-btn { width: 100%; padding: 14px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
         button.secondary-btn { width: 100%; padding: 14px; border: 2px solid #dfe6e9; background: #fff; color: #636e72; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 15px; }
         
+        /* Deactivate Button - Initially Hidden */
+        button.deactivate-btn { background-color: #ff4757; color: white; margin-top: 15px; }
+        button.deactivate-btn:active { background-color: #e04050; }
+
         #status { margin-top: 0; font-size: 13px; text-align: center; font-weight: 500; display: none; }
         #status.visible { display: block; margin-top: 20px; }
         .text-error { color: #ff4757; }
@@ -128,7 +132,6 @@
         </div>
         
         <button id="actionBtn" class="action-btn" onclick="sendSchedule()">Update Schedule</button>
-        
         <div id="status"></div>
 
         <div id="inlineScheduleArea" class="hidden">
@@ -145,6 +148,8 @@
             </div>
             <div id="pcStatusBanner" class="status-banner hidden"></div>
             <div id="scheduleListContainer"></div>
+            
+            <button id="deactivateBtn" class="action-btn deactivate-btn hidden" onclick="deactivateSchedule()">Deactivate Schedule</button>
         </div>
     </div>
 
@@ -197,6 +202,7 @@
             const listContainer = document.getElementById('scheduleListContainer');
             const pcStatusBanner = document.getElementById('pcStatusBanner');
             const refreshIcon = document.getElementById('refreshIcon');
+            const deactivateBtn = document.getElementById('deactivateBtn'); 
 
             // Settings
             try {
@@ -256,9 +262,36 @@
                 const payload = { type: "REMOTE_UPDATE", dates: selectedDates.sort(), clockIn: clockInInput.value, clockOut: clockOutInput.value, isRandomized: randomizeToggle.checked };
                 showStatus("Sending...", "normal");
                 try {
-                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
+                    // Send PAYLOAD to HIDDEN control topic
+                    await fetch(`https://ntfy.sh/${topic}_control`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Title': 'Internal_Data', 'Priority': '1', 'Tags': 'gear' } });
+                    
+                    // Send NOTIFICATION to VISIBLE topic
                     await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: 'New Schedule', headers: { 'Title': 'Schedule Updated', 'Priority': '4', 'Tags': 'calendar' } });
+                    
                     showStatus("Sent! Wait for PC confirmation.", "success");
+                } catch (err) { showStatus("Network Error.", "error"); }
+            };
+
+            // Deactivate
+            window.deactivateSchedule = async function() {
+                const topic = ntfyInput.value.trim();
+                if(!topic) return showStatus("Please check Settings > Ntfy Topic", "error");
+                
+                showStatus("Deactivating...", "normal");
+
+                try {
+                    // Send STOP command to HIDDEN control topic
+                    await fetch(`https://ntfy.sh/${topic}_control`, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ type: "REMOTE_STOP" }), 
+                        headers: { 'Title': 'Internal_Command', 'Priority': '5', 'Tags': 'octagonal_sign' } 
+                    });
+
+                    // Update UI immediately (RED TEXT as requested)
+                    showStatus("Deactivation request sent", "error"); 
+                    
+                    setTimeout(() => { forceSync(); }, 2000);
+
                 } catch (err) { showStatus("Network Error.", "error"); }
             };
 
@@ -279,12 +312,14 @@
                 const topic = ntfyInput.value.trim();
                 if(!topic) return;
                 
+                if(deactivateBtn) deactivateBtn.classList.add('hidden');
                 inlineScheduleArea.classList.remove('hidden'); 
                 if(!isForce) listContainer.innerHTML = '<div style="text-align:center;padding:10px;color:#ccc;">Checking...</div>';
                 pcStatusBanner.classList.add('hidden');
 
                 try {
-                    const res = await fetch(`https://ntfy.sh/${topic}/json?since=6h&poll=1`);
+                    // Fetch from HIDDEN control topic
+                    const res = await fetch(`https://ntfy.sh/${topic}_control/json?since=6h&poll=1`);
                     const text = await res.text();
                     const lines = text.trim().split('\n');
                     let lastState = null;
@@ -310,14 +345,12 @@
                 if(refreshIcon) refreshIcon.classList.add('spinning'); 
 
                 try {
-                    await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
+                    // Send Ping to HIDDEN control topic
+                    await fetch(`https://ntfy.sh/${topic}_control`, { method: 'POST', body: JSON.stringify({ type: "REQUEST_SYNC" }), headers: { 'Title': 'Ping', 'Priority': '1' } });
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     await fetchPCStatus(true);
-                } catch(e) {
-                    console.log(e);
-                } finally {
-                    if(refreshIcon) refreshIcon.classList.remove('spinning'); 
-                }
+                } catch(e) { console.log(e); } 
+                finally { if(refreshIcon) refreshIcon.classList.remove('spinning'); }
             };
 
             function renderPCState(data) {
@@ -325,7 +358,13 @@
                 if (data.isActive) { pcStatusBanner.textContent = "EXTENSION IS ACTIVE"; pcStatusBanner.classList.add('banner-active'); }
                 else { pcStatusBanner.textContent = "EXTENSION IS INACTIVE"; pcStatusBanner.classList.add('banner-inactive'); }
 
-                if (!data.tasks || data.tasks.length === 0) { listContainer.innerHTML = '<div style="text-align:center;color:#b2bec3;padding:10px;">Schedule is empty.</div>'; return; }
+                if (!data.tasks || data.tasks.length === 0) { 
+                    listContainer.innerHTML = '<div style="text-align:center;color:#b2bec3;padding:10px;">Schedule is empty.</div>'; 
+                    if(deactivateBtn) deactivateBtn.classList.add('hidden');
+                    return; 
+                }
+
+                if(deactivateBtn) deactivateBtn.classList.remove('hidden');
 
                 listContainer.innerHTML = "";
                 const grouped = {};
