@@ -36,14 +36,24 @@
         .time-col { display: flex; flex-direction: column; flex: 1; }
         .time-col label { font-size: 11px; font-weight: 700; color: #636e72; margin-bottom: 4px; text-align: left; }
         
-        input[type="time"], input[type="text"] { 
+        /* Updated Input Styling for Text Mode */
+        input[type="text"], input[type="tel"] { 
             width: 100%; padding: 12px; font-size: 16px; font-weight: 600; 
             text-align: center; border: 2px solid #dfe6e9; border-radius: 10px; 
             background-color: #fff; outline: none; color: #2d3436; 
             -webkit-appearance: none;
         }
         input:focus { border-color: #2ed573; }
-        input[type="text"] { text-align: left; font-weight: 400; font-size: 14px; }
+        
+        /* Specific style for time inputs to look monospace/digital */
+        .time-input { 
+            font-family: 'Courier New', monospace; 
+            letter-spacing: 2px;
+            font-size: 18px !important;
+        }
+
+        /* Standard text input for Settings */
+        .settings-input { text-align: left !important; font-weight: 400 !important; font-size: 14px !important; font-family: inherit !important; letter-spacing: normal !important; }
 
         /* Calendar */
         .calendar-wrapper { background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #dfe6e9; margin-bottom: 20px; }
@@ -116,8 +126,14 @@
 
         <div class="input-group">
             <div class="time-row">
-                <div class="time-col"><label>Clock IN</label><input type="time" id="clockInTime"></div>
-                <div class="time-col"><label>Clock OUT</label><input type="time" id="clockOutTime"></div>
+                <div class="time-col">
+                    <label>Clock IN</label>
+                    <input type="text" inputmode="numeric" maxlength="5" id="clockInTime" class="time-input" placeholder="00:00">
+                </div>
+                <div class="time-col">
+                    <label>Clock OUT</label>
+                    <input type="text" inputmode="numeric" maxlength="5" id="clockOutTime" class="time-input" placeholder="00:00">
+                </div>
             </div>
 
             <div class="calendar-wrapper">
@@ -170,7 +186,7 @@
         <div class="settings-block">
             <div class="time-col">
                 <label style="margin-bottom: 8px;">Ntfy Topic</label>
-                <input type="text" id="ntfyTopicInput" placeholder="Enter topic name...">
+                <input type="text" id="ntfyTopicInput" class="settings-input" placeholder="Enter topic name...">
             </div>
         </div>
         <div style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Changes are saved automatically</div>
@@ -203,6 +219,38 @@
             const pcStatusBanner = document.getElementById('pcStatusBanner');
             const refreshIcon = document.getElementById('refreshIcon');
             const deactivateBtn = document.getElementById('deactivateBtn'); 
+
+            // --- TIME FORMATTING LOGIC ---
+            function setupTimeInput(input) {
+                input.addEventListener('input', (e) => {
+                    let v = e.target.value.replace(/\D/g, ''); // Digits only
+                    if (v.length > 4) v = v.slice(0, 4); // Max 4 digits
+                    
+                    if (v.length >= 3) {
+                        v = v.slice(0, 2) + ':' + v.slice(2);
+                    }
+                    e.target.value = v;
+                });
+
+                // Validation on blur (Fix incomplete times like "83:0")
+                input.addEventListener('blur', (e) => {
+                    const v = e.target.value;
+                    const parts = v.split(':');
+                    if (parts.length === 2) {
+                        let h = parseInt(parts[0]);
+                        let m = parseInt(parts[1]);
+                        if (h > 23) h = 23; 
+                        if (m > 59) m = 59;
+                        e.target.value = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+                    } else if (v.length > 0) {
+                        // Reset invalid input
+                        e.target.value = "";
+                    }
+                });
+            }
+            setupTimeInput(clockInInput);
+            setupTimeInput(clockOutInput);
+            // ------------------------------
 
             // Settings
             try {
@@ -259,7 +307,15 @@
                 if(!topic) return showStatus("Please check Settings > Ntfy Topic", "error");
                 if(selectedDates.length === 0) return showStatus("Select at least one date.", "error");
                 
-                const payload = { type: "REMOTE_UPDATE", dates: selectedDates.sort(), clockIn: clockInInput.value, clockOut: clockOutInput.value, isRandomized: randomizeToggle.checked };
+                // VALIDATE TIME FORMAT
+                const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+                const inTime = clockInInput.value;
+                const outTime = clockOutInput.value;
+
+                if (inTime && !timeRegex.test(inTime)) return showStatus("Invalid Clock IN format (HH:MM)", "error");
+                if (outTime && !timeRegex.test(outTime)) return showStatus("Invalid Clock OUT format (HH:MM)", "error");
+                
+                const payload = { type: "REMOTE_UPDATE", dates: selectedDates.sort(), clockIn: inTime, clockOut: outTime, isRandomized: randomizeToggle.checked };
                 showStatus("Sending...", "normal");
                 try {
                     // Send PAYLOAD to HIDDEN control topic
@@ -287,7 +343,7 @@
                         headers: { 'Title': 'Internal_Command', 'Priority': '5', 'Tags': 'octagonal_sign' } 
                     });
 
-                    // Update UI immediately (RED TEXT as requested)
+                    // Update UI immediately
                     showStatus("Deactivation request sent", "error"); 
                     
                     setTimeout(() => { forceSync(); }, 2000);
