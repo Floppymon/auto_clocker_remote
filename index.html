@@ -8,16 +8,16 @@
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="icon" href="data:,">
     
     <style>
-        /* --- RESET & BASE STYLES --- */
+        /* --- STYLES --- */
         * { box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f8f9fa; color: #333; margin: 0; padding: 20px;
             max-width: 400px; margin-left: auto; margin-right: auto;
-            overscroll-behavior-y: none; /* Disables pull-to-refresh */
+            /* Disable pull-to-refresh on mobile to feel more like an app */
+            overscroll-behavior-y: none; 
         }
 
         /* Header */
@@ -32,7 +32,6 @@
 
         /* Inputs */
         .input-group { margin-bottom: 5px; text-align: center; }
-        
         .time-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
         .time-col { display: flex; flex-direction: column; flex: 1; }
         .time-col label { font-size: 11px; font-weight: 700; color: #636e72; margin-bottom: 4px; text-align: left; }
@@ -73,13 +72,7 @@
         button.action-btn { width: 100%; padding: 14px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #2ed573; color: white; margin-top: 5px; }
         button.secondary-btn { width: 100%; padding: 14px; border: 2px solid #dfe6e9; background: #fff; color: #636e72; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 15px; }
         
-        #status { 
-            margin-top: 0; 
-            font-size: 13px; 
-            text-align: center; 
-            font-weight: 500; 
-            display: none; 
-        }
+        #status { margin-top: 0; font-size: 13px; text-align: center; font-weight: 500; display: none; }
         #status.visible { display: block; margin-top: 20px; }
         .text-error { color: #ff4757; }
         .text-success { color: #2ed573; }
@@ -98,14 +91,10 @@
         .banner-active { background: #e8f5e9; color: #2ed573; border: 1px solid #c8e6c9; }
         .banner-inactive { background: #ffebee; color: #ff4757; border: 1px solid #ffcdd2; }
 
-        .refresh-btn {
-            background: none; border: none; color: #2ed573; font-weight: bold; font-size: 12px; 
-            cursor: pointer; display: flex; align-items: center; gap: 5px;
-        }
+        .refresh-btn { background: none; border: none; color: #2ed573; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .refresh-icon { transition: transform 0.5s; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spinning { animation: spin 1s linear infinite; }
-
     </style>
 </head>
 <body>
@@ -116,7 +105,7 @@
             <div class="header-right">
                 <svg onclick="showSettingsView()" class="settings-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
             </div>
         </div>
@@ -185,7 +174,9 @@
     <script>
         // Register Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(console.log);
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch(e => console.log('SW Registration Failed', e));
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -356,7 +347,6 @@
                 }
             }
 
-            // AUTO-INIT
             if (ntfyInput.value) fetchPCStatus();
         });
     </script>
